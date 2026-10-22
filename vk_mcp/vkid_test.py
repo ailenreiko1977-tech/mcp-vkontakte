@@ -85,11 +85,18 @@ def routes(settings, store, browser_session, guard, page):
             verifier = secrets.token_urlsafe(48)
             challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).decode().rstrip("=")
             pending[state] = {"expires": time.time()+600, "sid": request.session["sid"], "verifier": verifier}
-            return RedirectResponse("https://id.vk.com/authorize?"+urlencode({
+            authorize_url = "https://id.vk.com/authorize?"+urlencode({
                 "response_type": "code", "client_id": settings.vkid_test_app_id,
                 "redirect_uri": redirect, "scope": "groups", "state": state,
                 "code_challenge": challenge, "code_challenge_method": "S256",
-            }), status_code=303)
+            })
+            # A form-action 'self' policy also blocks cross-origin redirects
+            # after form submission in Chromium. Use an explicit navigation link.
+            return page("Продолжить вход в VK ID",
+                        "<p>Проверка подготовлена. Перейди на страницу VK ID, чтобы разрешить вход.</p>"
+                        + "<p><a rel='noreferrer' href='"+html.escape(authorize_url, quote=True)
+                        + "'>Продолжить на сайте VK ID</a></p>"
+                        + "<p>Ссылка действует 10 минут и предназначена для этого браузера. Ключи копировать не требуется.</p>")
         body = ("<p>Разовая проверка: вход через VK ID с разрешением «Сообщества», поиск с VPS, "
                 "обновление ключа и повторный поиск. Ничего в VK не публикуется.</p>"
                 "<p>Тестовые ключи обрабатываются на сервере только во время проверки, "

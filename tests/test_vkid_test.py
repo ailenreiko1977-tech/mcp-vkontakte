@@ -1,4 +1,6 @@
 from dataclasses import replace
+from html import unescape
+import re
 from urllib.parse import parse_qs, urlsplit
 
 import httpx
@@ -6,6 +8,14 @@ from starlette.testclient import TestClient
 
 from vk_mcp.app import create_app
 from test_security import cookie
+
+
+def authorize_query(response):
+    assert response.status_code == 200
+    assert 'location' not in response.headers
+    assert "form-action 'self'" in response.headers['content-security-policy']
+    url = unescape(re.search(r"href='(https://id\.vk\.com/authorize\?[^']+)'", response.text)[1])
+    return parse_qs(urlsplit(url).query)
 
 
 def test_disabled_by_default(settings, store):
@@ -27,7 +37,7 @@ def test_owner_csrf_and_callback_binding(settings, store):
         assert client.post('/vkid-test', data={'csrf': store.session(sid)['csrf']}).status_code == 400
         assert client.post('/vkid-test', headers={'Origin': settings.public_url}).status_code == 400
         r = client.post('/vkid-test', data={'csrf': store.session(sid)['csrf']}, headers={'Origin': settings.public_url}, follow_redirects=False)
-        q = parse_qs(urlsplit(r.headers['location']).query)
+        q = authorize_query(r)
         assert q['scope'] == ['groups']
         assert q['code_challenge_method'] == ['S256'] and len(q['code_challenge'][0]) == 43
         client.cookies.clear()
@@ -68,7 +78,7 @@ def test_exchange_refresh_and_no_secrets_or_connection_changes(settings, store, 
     with TestClient(create_app(settings, store=store), base_url=settings.public_url) as client:
         client.cookies.set('vk_session', cookie(settings, sid))
         r = client.post('/vkid-test', headers={'Origin': settings.public_url}, data={'csrf': store.session(sid)['csrf']}, follow_redirects=False)
-        state = parse_qs(urlsplit(r.headers['location']).query)['state'][0]
+        state = authorize_query(r)['state'][0]
         r = client.get('/vkid-test/callback', params={'state': state, 'code': 'code-test', 'device_id': 'device-test'})
         assert 'search_before_refresh' in r.text and 'search_after_refresh' in r.text
         assert 'vk_error_code' in r.text and '15' in r.text
