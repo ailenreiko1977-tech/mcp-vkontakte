@@ -12,3 +12,7 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install -r requirements.lock pytest==9.1.1 pytest-asyncio==1.4.0
       - run: python -m pytest -q
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/vk-app.test.cjs

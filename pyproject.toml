@@ -25,7 +25,7 @@ mcp-vkontakte = "vk_mcp.app:main"
 include = ["vk_mcp*"]
 
 [tool.setuptools.package-data]
-vk_mcp = ["data/*.json"]
+vk_mcp = ["data/*.json", "web/*.js", "web/*.txt"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

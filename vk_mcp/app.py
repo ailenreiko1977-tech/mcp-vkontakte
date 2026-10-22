@@ -63,12 +63,15 @@ class BoundaryMiddleware:
             return await receive()
         async def secure_send(message):
             if message["type"]=="http.response.start":
+                mini_app=scope.get("path")=="/vk-app" and message["status"]==200
+                security=[(b"content-security-policy",b"default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; connect-src 'none'; form-action 'none'; frame-ancestors https://vk.com https://vk.ru https://*.vk.com https://*.vk.ru; base-uri 'none'")] if mini_app else [
+                    (b"x-frame-options",b"DENY"),
+                    (b"content-security-policy",b"default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'")]
                 message.setdefault("headers",[]).extend([
                     (b"cache-control",b"no-store"),(b"x-content-type-options",b"nosniff"),
                     # no-referrer makes browser form POSTs send Origin: null.
                     # strict-origin preserves the HTTPS origin without leaking paths or query strings.
-                    (b"referrer-policy",b"strict-origin"),(b"x-frame-options",b"DENY"),
-                    (b"content-security-policy",b"default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'")])
+                    (b"referrer-policy",b"strict-origin")]+security)
             await send(message)
         await self.app(scope,bounded_receive,secure_send)
 
@@ -262,7 +265,8 @@ def create_app(settings=None,store=None,service=None,verifier=None):
         async with server.session_manager.run(): yield
 
     mcp_app=server.streamable_http_app()
-    app=Starlette(routes=[Route("/",home),Route("/health",health),Route("/privacy",privacy),Route("/login",login),Route("/callback",callback),
+    from .vk_app import routes as vk_app_routes
+    app=Starlette(routes=[*vk_app_routes(settings),Route("/",home),Route("/health",health),Route("/privacy",privacy),Route("/login",login),Route("/callback",callback),
         Route("/account",account,methods=["GET","POST"]),Route("/actions/{action_id}",action,methods=["GET","POST"]),Route("/logout",logout,methods=["POST"]),Mount("/",app=mcp_app)],
         lifespan=lifespan,exception_handlers={PolicyError:policy_error})
     app.add_middleware(SessionMiddleware,secret_key=settings.cookie_secret,session_cookie="vk_session",https_only=True,same_site="lax",max_age=1800)

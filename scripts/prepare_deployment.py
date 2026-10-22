@@ -39,7 +39,10 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("--domain",required=True)
     parser.add_argument("--owner-login",help="Optional first user; a temporary password is saved only in .secrets/owner.json")
+    parser.add_argument("--vk-app-id",type=int,default=0,help="Optional VK Mini App ID for the browser-only access check")
     args=parser.parse_args()
+    if args.vk_app_id<0:
+        parser.error("VK app ID must be nonnegative")
     if not re.fullmatch(r"[a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?",args.domain) or "." not in args.domain:
         parser.error("Provide an ASCII domain name only")
     if args.owner_login and not re.fullmatch(r"[a-zA-Z0-9_-]{1,64}",args.owner_login):
@@ -57,7 +60,7 @@ def main():
     if args.owner_login:
         document["users"]=[{"username":args.owner_login,"enabled":True,"credentials":[{"type":"password","value":owner_password,"temporary":True}],"requiredActions":["UPDATE_PASSWORD"]}]
     files={
-        "app.env":f"PUBLIC_URL={origin}\nOIDC_ISSUER={origin}/auth/realms/vk\nENCRYPTION_KEY={Fernet.generate_key().decode()}\nCOOKIE_SECRET={secrets.token_urlsafe(48)}\nOIDC_CLIENT_ID=vk-dashboard\nOIDC_CLIENT_SECRET={dashboard_secret}\nDB_PATH=/data/vk.sqlite3\n",
+        "app.env":f"PUBLIC_URL={origin}\nOIDC_ISSUER={origin}/auth/realms/vk\nENCRYPTION_KEY={Fernet.generate_key().decode()}\nCOOKIE_SECRET={secrets.token_urlsafe(48)}\nOIDC_CLIENT_ID=vk-dashboard\nOIDC_CLIENT_SECRET={dashboard_secret}\nDB_PATH=/data/vk.sqlite3\nVK_MINI_APP_ID={args.vk_app_id}\n",
         "keycloak.env":f"KC_DB_PASSWORD={db_secret}\nKC_BOOTSTRAP_ADMIN_USERNAME=admin\nKC_BOOTSTRAP_ADMIN_PASSWORD={admin_secret}\n",
         "postgres.env":f"POSTGRES_DB=keycloak\nPOSTGRES_USER=keycloak\nPOSTGRES_PASSWORD={db_secret}\n",
         "compose.env":f"DOMAIN={args.domain}\n",

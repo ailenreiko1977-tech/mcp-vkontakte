@@ -14,6 +14,7 @@ class Settings:
     oidc_client_secret: str
     db_path: Path = Path(".local/vk.sqlite3")
     scope: str = "vk-mcp"
+    vk_app_id: int = 0
 
     def __post_init__(self):
         for url in (self.public_url, self.issuer):
@@ -24,6 +25,8 @@ class Settings:
             raise ValueError("PUBLIC_URL must be a site origin")
         if len(self.cookie_secret) < 32:
             raise ValueError("COOKIE_SECRET must contain at least 32 characters")
+        if not isinstance(self.vk_app_id,int) or self.vk_app_id<0:
+            raise ValueError("VK_MINI_APP_ID must be a nonnegative integer")
 
     @property
     def resource(self):
@@ -35,4 +38,5 @@ class Settings:
         if any(not os.getenv(name) for name in required):
             raise ValueError("Missing server configuration; follow docs/DEPLOYMENT.md")
         return cls(*(os.environ[name].rstrip("/") if name in ("PUBLIC_URL", "OIDC_ISSUER") else os.environ[name] for name in required),
-                   db_path=Path(os.getenv("DB_PATH", ".local/vk.sqlite3")))
+                   db_path=Path(os.getenv("DB_PATH", ".local/vk.sqlite3")),
+                   vk_app_id=int(os.getenv("VK_MINI_APP_ID","0")))
