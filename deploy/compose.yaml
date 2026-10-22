@@ -39,7 +39,7 @@ services:
       KC_HTTP_ENABLED: "true"
       KC_HTTP_RELATIVE_PATH: /auth
       KC_PROXY_HEADERS: xforwarded
-      KC_HOSTNAME: https://${DOMAIN}
+      KC_HOSTNAME: https://${DOMAIN}/auth
       KC_HEALTH_ENABLED: "true"
     volumes:
       - ../.secrets/realm.json:/opt/keycloak/data/import/vk-realm.json:ro
