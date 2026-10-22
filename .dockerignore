@@ -1,0 +1,6 @@
+*
+!requirements.lock
+!vk_mcp/
+!vk_mcp/**
+!scripts/
+!scripts/cleanup.py

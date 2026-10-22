@@ -1,0 +1,16 @@
+{$DOMAIN} {
+    # Do not enable access logging: callback query strings contain short-lived codes.
+    header Strict-Transport-Security "max-age=31536000"
+    request_body {
+        max_size 1MB
+    }
+    # Admin console uses an SSH tunnel; it is not published on the public domain.
+    @keycloak_admin path /auth/admin /auth/admin/*
+    respond @keycloak_admin 404
+    handle /auth/* {
+        reverse_proxy keycloak:8080
+    }
+    handle {
+        reverse_proxy app:8000
+    }
+}
