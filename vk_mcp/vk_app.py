@@ -20,6 +20,9 @@ def routes(settings):
 <button id="authorize" type="button" disabled>Разрешить доступ и проверить поиск</button>
 <ul id="results"></ul>
 <button id="copy" type="button" disabled>Скопировать проверенный ключ</button>
+<button id="show-key" type="button" hidden>Показать ключ для ручного копирования</button>
+<section id="manual" hidden><p>Здесь секретный ключ. Не отправляй его в чат и не делай скриншот этого поля.</p>
+<textarea id="manual-key" aria-label="Ключ для ручного копирования" readonly rows="4" style="width:100%;box-sizing:border-box;font:14px monospace" autocomplete="off" spellcheck="false"></textarea></section>
 <small>Ключ остаётся в памяти этой страницы. Мы не отправляем его на наш сервер и не сохраняем в браузере. После обновления страницы он исчезнет. Копирование выполняется только по твоему нажатию.</small>
 <p>Если поиск пройдёт, добавь ключ в кабинете как новое подключение <strong>vk_user</strong> с типом «Пользовательский токен API». Затем отдельно проверим, работает ли он с VPS. Успех проверки внутри VK этого ещё не гарантирует.</p>
 <p><a href="/account" target="_blank" rel="noopener noreferrer">Открыть мой кабинет</a></p>

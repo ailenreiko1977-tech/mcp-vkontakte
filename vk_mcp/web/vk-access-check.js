@@ -1,4 +1,4 @@
-/* The token lives only in this closure. Never log it, render it or persist it. */
+/* Never log or persist the token. Manual display requires a separate explicit user click. */
 (() => {
   'use strict';
   const appId = Number(document.getElementById('probe').dataset.appId);
@@ -6,6 +6,9 @@
   const authorize = document.getElementById('authorize');
   const copy = document.getElementById('copy');
   const results = document.getElementById('results');
+  const showKey = document.getElementById('show-key');
+  const manual = document.getElementById('manual');
+  const manualKey = document.getElementById('manual-key');
   let token = null;
   let verified = false;
   let busy = false;
@@ -35,6 +38,9 @@
     copy.disabled = true;
     token = null;
     verified = false;
+    showKey.hidden = true;
+    manual.hidden = true;
+    manualKey.value = '';
     results.replaceChildren();
     let phase = 'получение пользовательского ключа';
     try {
@@ -73,9 +79,24 @@
       await navigator.clipboard.writeText(token);
       status.textContent = 'Ключ скопирован. Вставь его только в защищённое поле своего кабинета. В чат отправлять не нужно.';
     } catch (error) {
-      status.textContent = 'Браузер не разрешил копирование. Ключ не был отправлен на сервер. Сообщи об этом, не присылай сам ключ.';
+      try {
+        const result = await window.vkBridge.send('VKWebAppCopyText', {text: token});
+        if (result?.result !== true) throw new Error('VK clipboard refused');
+        status.textContent = 'Ключ скопирован средствами VK. Вставь его в защищённое поле своего кабинета. В чат отправлять не нужно.';
+      } catch (bridgeError) {
+        showKey.hidden = false;
+        status.textContent = 'Поиск работает, но автоматическое копирование недоступно. Нажми «Показать ключ для ручного копирования», затем Ctrl+C. Не делай скриншот открытого ключа.';
+      }
     }
   });
-  window.addEventListener('pagehide', () => { token = null; verified = false; });
+  showKey.addEventListener('click', () => {
+    if (!verified || !token) return;
+    manualKey.value = token;
+    manual.hidden = false;
+    manualKey.focus();
+    manualKey.select();
+    status.textContent = 'Ключ выделен. Нажми Ctrl+C и вставь его только в своём кабинете MCP. Не отправляй этот экран в чат.';
+  });
+  window.addEventListener('pagehide', () => { token = null; verified = false; manualKey.value = ''; manual.hidden = true; });
   void init();
 })();
