@@ -15,6 +15,8 @@ class Settings:
     db_path: Path = Path(".local/vk.sqlite3")
     scope: str = "vk-mcp"
     vk_app_id: int = 0
+    vkid_test_app_id: int = 0
+    vkid_test_owner: str = ""
 
     def __post_init__(self):
         for url in (self.public_url, self.issuer):
@@ -39,4 +41,6 @@ class Settings:
             raise ValueError("Missing server configuration; follow docs/DEPLOYMENT.md")
         return cls(*(os.environ[name].rstrip("/") if name in ("PUBLIC_URL", "OIDC_ISSUER") else os.environ[name] for name in required),
                    db_path=Path(os.getenv("DB_PATH", ".local/vk.sqlite3")),
-                   vk_app_id=int(os.getenv("VK_MINI_APP_ID","0")))
+                   vk_app_id=int(os.getenv("VK_MINI_APP_ID","0")),
+                   vkid_test_app_id=int(os.getenv("VKID_TEST_APP_ID","0")),
+                   vkid_test_owner=os.getenv("VKID_TEST_OWNER",""))

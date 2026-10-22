@@ -266,7 +266,8 @@ def create_app(settings=None,store=None,service=None,verifier=None):
 
     mcp_app=server.streamable_http_app()
     from .vk_app import routes as vk_app_routes
-    app=Starlette(routes=[*vk_app_routes(settings),Route("/",home),Route("/health",health),Route("/privacy",privacy),Route("/login",login),Route("/callback",callback),
+    from .vkid_test import routes as vkid_test_routes
+    app=Starlette(routes=[*vkid_test_routes(settings,store,browser_session,guard,page),*vk_app_routes(settings),Route("/",home),Route("/health",health),Route("/privacy",privacy),Route("/login",login),Route("/callback",callback),
         Route("/account",account,methods=["GET","POST"]),Route("/actions/{action_id}",action,methods=["GET","POST"]),Route("/logout",logout,methods=["POST"]),Mount("/",app=mcp_app)],
         lifespan=lifespan,exception_handlers={PolicyError:policy_error})
     app.add_middleware(SessionMiddleware,secret_key=settings.cookie_secret,session_cookie="vk_session",https_only=True,same_site="lax",max_age=1800)
