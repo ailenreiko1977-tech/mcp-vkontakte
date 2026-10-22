@@ -65,7 +65,9 @@ class BoundaryMiddleware:
             if message["type"]=="http.response.start":
                 message.setdefault("headers",[]).extend([
                     (b"cache-control",b"no-store"),(b"x-content-type-options",b"nosniff"),
-                    (b"referrer-policy",b"no-referrer"),(b"x-frame-options",b"DENY"),
+                    # no-referrer makes browser form POSTs send Origin: null.
+                    # strict-origin preserves the HTTPS origin without leaking paths or query strings.
+                    (b"referrer-policy",b"strict-origin"),(b"x-frame-options",b"DENY"),
                     (b"content-security-policy",b"default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'")])
             await send(message)
         await self.app(scope,bounded_receive,secure_send)
@@ -157,7 +159,7 @@ def create_app(settings=None,store=None,service=None,verifier=None):
     async def guard(request,session):
         if not session: raise PolicyError("Sign in required")
         if request.headers.get("origin")!=settings.public_url:
-            raise PolicyError("Invalid form origin")
+            raise PolicyError("Не удалось проверить источник формы. Открой кабинет заново, обнови страницу и повтори сохранение.")
         form=await request.form(max_files=0,max_fields=10,max_part_size=8192)
         if not secrets.compare_digest(str(form.get("csrf","")),session["csrf"]):
             raise PolicyError("Invalid or expired form; reload the page")
