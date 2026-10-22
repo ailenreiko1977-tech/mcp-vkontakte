@@ -14,7 +14,9 @@ from cryptography.fernet import Fernet
 def realm(domain,dashboard_secret):
     origin="https://"+domain
     scope={"name":"vk-mcp","protocol":"openid-connect","attributes":{"include.in.token.scope":"true"},
-        "protocolMappers":[{"name":"mcp-audience","protocol":"openid-connect","protocolMapper":"oidc-audience-mapper",
+        "protocolMappers":[{"name":"subject","protocol":"openid-connect","protocolMapper":"oidc-sub-mapper",
+            "consentRequired":False,"config":{"access.token.claim":"true","introspection.token.claim":"true"}},
+            {"name":"mcp-audience","protocol":"openid-connect","protocolMapper":"oidc-audience-mapper",
             "consentRequired":False,"config":{"included.custom.audience":origin+"/mcp","access.token.claim":"true","id.token.claim":"false"}}]}
     clients=[]
     for name in ("chatgpt","claude","codex"):

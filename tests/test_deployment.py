@@ -16,6 +16,7 @@ def test_owner_bootstrap_is_temporary_private_and_not_overwritten(tmp_path,monke
     owner=json.loads((tmp_path/".secrets/owner.json").read_text())
     realm=json.loads((tmp_path/".secrets/realm.json").read_text())
     assert realm["registrationAllowed"] is False
+    assert any(m["protocolMapper"]=="oidc-sub-mapper" and m["config"]["access.token.claim"]=="true" for m in realm["clientScopes"][0]["protocolMappers"])
     assert realm["users"][0]["credentials"][0]["temporary"] is True
     assert realm["users"][0]["requiredActions"]==["UPDATE_PASSWORD"]
     assert owner["temporary_password"] not in capsys.readouterr().out

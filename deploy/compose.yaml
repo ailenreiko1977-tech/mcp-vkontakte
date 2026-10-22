@@ -1,7 +1,7 @@
 name: mcp-vkontakte
 services:
   caddy:
-    image: caddy:2
+    image: caddy:2@sha256:504a44d7d74bd2bc28a66afc4774912fc21223ca8a67734af1c54ab2f999b489
     restart: unless-stopped
     ports: ["80:80", "443:443"]
     environment:
@@ -28,7 +28,7 @@ services:
       timeout: 5s
       retries: 3
   keycloak:
-    image: quay.io/keycloak/keycloak:26.8.1
+    image: quay.io/keycloak/keycloak:26.8.1@sha256:79c623a22abacf3fe6c00a5fb30f5b7843d717b234033b80995891c06116d244
     command: ["start", "--import-realm"]
     restart: unless-stopped
     env_file: ../.secrets/keycloak.env
@@ -48,7 +48,7 @@ services:
         condition: service_healthy
     mem_limit: 2g
   postgres:
-    image: postgres:17
+    image: postgres:17@sha256:b8faeff7712663c2773a190181e1246e37e364b887611c04658c28b44e2408fe
     restart: unless-stopped
     env_file: ../.secrets/postgres.env
     volumes: ["postgres_data:/var/lib/postgresql/data"]

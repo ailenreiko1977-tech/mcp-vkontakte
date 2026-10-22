@@ -6,11 +6,9 @@
     }
     # Admin console uses an SSH tunnel; it is not published on the public domain.
     @keycloak_admin path /auth/admin /auth/admin/*
-    respond @keycloak_admin 404
-    handle /auth/* {
-        reverse_proxy keycloak:8080
-    }
-    handle {
+    route {
+        respond @keycloak_admin 404
+        reverse_proxy /auth/* keycloak:8080
         reverse_proxy app:8000
     }
 }
